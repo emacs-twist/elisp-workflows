@@ -54,5 +54,5 @@ Each workflow accepts the following input parameters:
 
 For details, refer to the workflow files:
 
-- [[file:byte-compile.yml]]
-- [[file:melpazoid.yml]]
+- [[file:.github/workflows/byte-compile.yml]]
+- [[file:.github/workflows/melpazoid.yml]]
