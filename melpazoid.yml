@@ -1,0 +1,70 @@
+name: Run melpazoid on your rice project
+
+on:
+  workflow_call:
+    inputs:
+      rice-config:
+        required: false
+        type: string
+        default: 'github:emacs-twist/rice-config'
+      melpa:
+        required: false
+        type: string
+        default: 'github:melpa/melpa'
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.matrix.outputs.include }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@V27
+
+      - name: Get the matrix
+        id: matrix
+        run: |
+          set -e
+          echo "include=$(nix eval "${{ inputs.rice-config }}#melpaRecipes" --json --apply 'attrs: builtins.attrValues (builtins.mapAttrs (package: recipe: { inherit package recipe; }) attrs)' \
+            --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}")" \
+            >> "$GITHUB_OUTPUT"
+
+  melpazoid:
+    needs: matrix
+
+    strategy:
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.include) }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: src
+
+    - uses: actions/checkout@v4
+      with:
+        repository: riscy/melpazoid
+        path: melpazoid
+
+    # Install Python and melpazoid in the same way as the original repository.
+    # See https://github.com/riscy/melpazoid/blob/master/.github/workflows/test.yml
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+
+    - name: Install melpazoid
+      working-directory: melpazoid
+      run: |
+        sudo apt-get install emacs
+        emacs --version
+        python -m pip install --upgrade pip
+        pip install . mypy pytest black
+
+    - name: Check the package using melpazoid
+      working-directory: melpazoid
+      run: |
+         RECIPE='${{ matrix.recipe }}' LOCAL_REPO="${GITHUB_WORKSPACE}/src" make
