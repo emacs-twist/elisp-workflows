@@ -7,7 +7,7 @@ With these workflows, you can automate the following checks with a very concise 
 - Run byte-compile with every Emacs version supporting your package.
 - Run melpazoid (which is the official checker on MELPA).
 ** Installation
-First add a ~flake.nix~ that conforms that the Rice API to your repository.
+First follow the instruction in [[https://github.com/emacs-twist/rice-config][rice-config]] to add a ~flake.nix~ that conforms that the Rice API.
 Then create a workflow file in ~.github/workflows~ directory of same repository.
 ** Example
 You can add the following file to your repository.
