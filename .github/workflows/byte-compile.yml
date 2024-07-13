@@ -11,6 +11,10 @@ on:
         required: false
         type: string
         default: 'github:melpa/melpa'
+      systems:
+        required: false
+        type: string
+        default: 'github:nix-systems/default'
 
 jobs:
   matrix:
@@ -28,6 +32,7 @@ jobs:
           echo "matrix=$(\
             nix eval "${{ inputs.rice-config }}#github.matrix" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
+            --override-input systems "${{ inputs.systems }}" \
             --json)" >> "$GITHUB_OUTPUT"
 
   check-compile:
@@ -51,4 +56,5 @@ jobs:
           nix build \
             "${{ inputs.rice-config }}#checks.${{ matrix.arch }}.${{ matrix.target }}-compile-${{ matrix.emacs }}" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
+            --override-input systems "${{ inputs.systems }}" \
             --print-build-logs
