@@ -10,7 +10,7 @@ With these workflows, you can automate the following checks with a very concise 
 First follow the instruction in [[https://github.com/emacs-twist/rice-config][rice-config]] to add a ~flake.nix~ that conforms that the Rice API.
 Then create a workflow file in ~.github/workflows~ directory of same repository.
 ** Example
-You can add the following file to your repository.
+You can add the following GitHub workflow file to your repository:
 
 #+begin_src yaml
   name: Check Emacs Lisp
@@ -33,6 +33,7 @@ You can add the following file to your repository.
       with:
         rice-config: github:your-user/rice-config
         melpa: github:your-user/melpa/branch
+        systems: github:nix-systems/x86_64-linux
 
     melpazoid:
       uses: emacs-twist/elisp-workflows/.github/workflows/melpazoid.yml@master
@@ -51,6 +52,10 @@ Each workflow accepts the following input parameters:
 
 - ~rice-config~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/emacs-twist/rice-config][rice-config]]. This is optional, and the original repository will be used in that case, but it is recommended to fork the repository and add ~flake.lock~ to prevent from supply-chain attacks.
 - ~melpa~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/melpa/melpa][melpa]]. If your package is already on MELPA and no recipe change is involved, you can omit this setting. If your package is not available on MELPA yet, specify a branch that contains a recipe for the package, e.g. ~github:your-user/melpa/branch~. See the documentation of rice-config for details.
+
+The following input parameter is accepted by ~byte-compile~, but not by ~melpazoid~:
+
+- ~systems~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/nix-systems][nix-systems]]. The CI matrix will be generated for these systems. The default value is [[https://github.com/nix-systems/default][github:nix-systems/default]], which means the checks will be run on both Mac and Linux. If you are not worried about cross-platform compatibility of your package, you can complete the CI earlier by setting this value to [[https://github.com/nix-systems/x86_64-linux][github:nix-systems/x86_64-linux]], because Nix is generally faster on Linux than on Mac especially on GitHub Actions.
 
 For details, refer to the workflow files:
 
