@@ -35,7 +35,8 @@ jobs:
         run: |
           set -e
           echo "include=$(nix eval "${{ inputs.rice-config }}#melpaRecipes" --json --apply 'attrs: builtins.attrValues (builtins.mapAttrs (package: recipe: { inherit package recipe; }) attrs)' \
-            --override-input rice-lock "path:$PWD/${{ inputs.lock-dir }}" --override-input registries "${{ inputs.registries }}" \
+            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
+            --override-input registries "${{ inputs.registries }}" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}")" \
             >> "$GITHUB_OUTPUT"
 

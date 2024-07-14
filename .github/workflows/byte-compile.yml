@@ -40,7 +40,8 @@ jobs:
           echo "matrix=$(\
             nix eval "${{ inputs.rice-config }}#github.matrix" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
-            --override-input rice-lock "path:$PWD/${{ inputs.lock-dir }}" --override-input registries "${{ inputs.registries }}" \
+            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
+            --override-input registries "${{ inputs.registries }}" \
             --override-input systems "${{ inputs.systems }}" \
             --json)" >> "$GITHUB_OUTPUT"
 
@@ -66,6 +67,7 @@ jobs:
           nix build \
             "${{ inputs.rice-config }}#checks.${{ matrix.arch }}.${{ matrix.target }}-compile-${{ matrix.emacs }}" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
-            --override-input rice-lock "path:$PWD/${{ inputs.lock-dir }}" --override-input registries "${{ inputs.registries }}" \
+            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
+            --override-input registries "${{ inputs.registries }}" \
             --override-input systems "${{ inputs.systems }}" \
             --print-build-logs
