@@ -11,7 +11,7 @@ With these workflows, you can automate the following checks with a very concise 
 ** Installation
 First follow the instruction in [[https://github.com/emacs-twist/rice-config][rice-config]] to add a ~flake.nix~ that conforms that the Rice API.
 Then create a workflow file in ~.github/workflows~ directory of same repository.
-** Example
+** Usage and example
 You can add the following GitHub workflow file to your repository:
 
 #+begin_src yaml
@@ -54,6 +54,8 @@ Each workflow accepts the following input parameters:
 
 - ~rice-config~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/emacs-twist/rice-config][rice-config]]. This is optional, and the original repository will be used in that case, but it is recommended to fork the repository and add ~flake.lock~ to prevent from supply-chain attacks.
 - ~melpa~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/melpa/melpa][melpa]]. If your package is already on MELPA and no recipe change is involved, you can omit this setting. If your package is not available on MELPA yet, specify a branch that contains a recipe for the package, e.g. ~github:your-user/melpa/branch~. See the documentation of rice-config for details.
+- ~registries~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/emacs-twist/registries][registries]]. If you use a custom registry configuration for your package(s), you will have to set this option as well.
+- ~lock-dir~ (optional) :: A relative path from the project root to the lock directory. By default, it is ~.rice-lock/default~.
 
 The following input parameter is accepted by ~byte-compile~, but not by ~melpazoid~:
 
