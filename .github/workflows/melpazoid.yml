@@ -45,6 +45,7 @@ jobs:
     strategy:
       matrix:
         include: ${{ fromJSON(needs.matrix.outputs.include) }}
+      fail-fast: false
 
     runs-on: ubuntu-latest
 

@@ -49,6 +49,7 @@ jobs:
 
     strategy:
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
+      fail-fast: false
 
     runs-on: ${{ matrix.os }}
 
