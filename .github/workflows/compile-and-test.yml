@@ -1,5 +1,4 @@
-name: Byte-compile
-
+name: Compile and test
 on:
   workflow_call:
     inputs:
@@ -23,7 +22,6 @@ on:
         required: false
         type: string
         default: '.rice-lock/default'
-
 jobs:
   matrix:
     runs-on: ubuntu-latest
@@ -31,12 +29,11 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: cachix/install-nix-action@V27
-
       - name: Get the matrix
         id: matrix
         run: |
+          set -e
           echo "matrix=$(\
             nix eval "${{ inputs.rice-config }}#github.matrix" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
@@ -44,28 +41,34 @@ jobs:
             --override-input registries "${{ inputs.registries }}" \
             --override-input systems "${{ inputs.systems }}" \
             --json)" >> "$GITHUB_OUTPUT"
-
-  check-compile:
+  compile-and-test:
     needs: matrix
-
     strategy:
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
       fail-fast: false
-
     runs-on: ${{ matrix.os }}
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: cachix/install-nix-action@V27
         with:
           extra_nix_config: |
             accept-flake-config = true
-
       - name: Byte compile
         run: |
           nix build \
             "${{ inputs.rice-config }}#checks.${{ matrix.arch }}.${{ matrix.target }}-compile-${{ matrix.emacs }}" \
+            --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
+            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
+            --override-input registries "${{ inputs.registries }}" \
+            --override-input systems "${{ inputs.systems }}" \
+            --print-build-logs
+      # The same options as byte-compile except for the subcommand (test-type)
+      # and the installable (test-derivation).
+      - name: Test
+        if: ${{ matrix.test-type }}
+        run: |
+          nix ${{ matrix.test-type }} \
+            "${{ inputs.rice-config }}#${{ matrix.test-derivation }}" \
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
             ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
             --override-input registries "${{ inputs.registries }}" \

@@ -30,8 +30,8 @@ You can add the following GitHub workflow file to your repository:
     workflow_dispatch:
 
   jobs:
-    byte-compile:
-      uses: emacs-twist/elisp-workflows/.github/workflows/byte-compile.yml@master
+    compile-and-test:
+      uses: emacs-twist/elisp-workflows/.github/workflows/compile-and-test.yml@master
       with:
         rice-config: github:your-user/rice-config
         melpa: github:your-user/melpa/branch
@@ -44,7 +44,7 @@ You can add the following GitHub workflow file to your repository:
         melpa: github:your-user/melpa/branch
 #+end_src
 
-This workflow runs byte-compile and melpazoid in parallel.
+This workflow runs byte-compile (and optional test) and melpazoid in parallel.
 Byte-compile is run on every Emacs version supported by your package(s).
 Melpazoid is run on the latest release version of Emacs.
 
@@ -57,11 +57,11 @@ Each workflow accepts the following input parameters:
 - ~registries~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/emacs-twist/registries][registries]]. If you use a custom registry configuration for your package(s), you will have to set this option as well.
 - ~lock-dir~ (optional) :: A relative path from the project root to the lock directory. By default, it is ~.rice-lock/default~. If your package doesn't have any Emacs Lisp dependency, set the value to ~''~ (an empty string).
 
-The following input parameter is accepted by ~byte-compile~, but not by ~melpazoid~:
+The following input parameter is accepted by ~compile-and-test~, but not by ~melpazoid~:
 
 - ~systems~ (optional) :: A [[https://nix.dev/manual/nix/latest/command-ref/new-cli/nix3-flake.html#flake-reference-attributes][flake reference URL]] to [[https://github.com/nix-systems][nix-systems]]. The CI matrix will be generated for these systems. The default value is [[https://github.com/nix-systems/default][github:nix-systems/default]], which means the checks will be run on both Mac and Linux. If you are not worried about cross-platform compatibility of your package, you can complete the CI earlier by setting this value to [[https://github.com/nix-systems/x86_64-linux][github:nix-systems/x86_64-linux]], because Nix is generally faster on Linux than on Mac especially on GitHub Actions.
 
 For details, refer to the workflow files:
 
-- [[file:.github/workflows/byte-compile.yml]]
+- [[file:.github/workflows/compile-and-test.yml]]
 - [[file:.github/workflows/melpazoid.yml]]
