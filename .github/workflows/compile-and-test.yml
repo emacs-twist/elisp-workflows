@@ -30,6 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@V27
+        with:
+          # Pin the Nix version to temporarily work around a Nix bug.
+          # See https://github.com/emacs-twist/twist.nix/issues/159
+          install_url: https://releases.nixos.org/nix/nix-2.20.8/install
       - name: Get the matrix
         id: matrix
         run: |
@@ -51,6 +55,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@V27
         with:
+          # Pin the Nix version to temporarily work around a Nix bug.
+          # See https://github.com/emacs-twist/twist.nix/issues/159
+          install_url: https://releases.nixos.org/nix/nix-2.20.8/install
           extra_nix_config: |
             accept-flake-config = true
       - name: Byte compile
