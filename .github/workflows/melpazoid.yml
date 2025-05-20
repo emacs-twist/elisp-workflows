@@ -44,7 +44,7 @@ jobs:
             --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}")" \
             >> "$GITHUB_OUTPUT"
 
-  melpazoid:
+  check:
     needs: matrix
 
     strategy:

@@ -45,7 +45,7 @@ jobs:
             --override-input registries "${{ inputs.registries }}" \
             --override-input systems "${{ inputs.systems }}" \
             --json)" >> "$GITHUB_OUTPUT"
-  compile-and-test:
+  build:
     needs: matrix
     strategy:
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
