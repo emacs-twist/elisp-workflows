@@ -67,7 +67,7 @@ jobs:
     # Install Python and melpazoid in the same way as the original repository.
     # See https://github.com/riscy/melpazoid/blob/master/.github/workflows/test.yml
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: 3.13.2
 
