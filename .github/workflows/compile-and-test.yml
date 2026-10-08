@@ -28,19 +28,31 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
       - name: Get the matrix
         id: matrix
+        env:
+          LOCK_DIR: ${{ inputs.lock-dir }}
+          MELPA: ${{ inputs.melpa }}
+          REGISTRIES: ${{ inputs.registries }}
+          RICE_CONFIG: ${{ inputs.rice-config }}
+          SYSTEMS: ${{ inputs.systems }}
         run: |
           set -e
-          echo "matrix=$(\
-            nix eval "${{ inputs.rice-config }}#github.matrix" \
-            --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
-            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
-            --override-input registries "${{ inputs.registries }}" \
-            --override-input systems "${{ inputs.systems }}" \
-            --json)" >> "$GITHUB_OUTPUT"
+          nix_args=(
+            --override-input rice-src "path:$PWD"
+            --override-input melpa "$MELPA"
+            --override-input registries "$REGISTRIES"
+            --override-input systems "$SYSTEMS"
+          )
+          if [[ -n "$LOCK_DIR" ]]; then
+            nix_args+=(--override-input rice-lock "path:$PWD/$LOCK_DIR")
+          fi
+          echo "matrix=$(nix eval "${RICE_CONFIG}#github.matrix" "${nix_args[@]}" --json)" \
+            >> "$GITHUB_OUTPUT"
   build:
     needs: matrix
     strategy:
@@ -48,26 +60,57 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: nixbuild/nix-quick-install-action@v35
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
       - name: Byte compile
+        env:
+          ARCH: ${{ matrix.arch }}
+          EMACS: ${{ matrix.emacs }}
+          LOCK_DIR: ${{ inputs.lock-dir }}
+          MELPA: ${{ inputs.melpa }}
+          REGISTRIES: ${{ inputs.registries }}
+          RICE_CONFIG: ${{ inputs.rice-config }}
+          SYSTEMS: ${{ inputs.systems }}
+          TARGET: ${{ matrix.target }}
         run: |
+          nix_args=(
+            --override-input rice-src "path:$PWD"
+            --override-input melpa "$MELPA"
+            --override-input registries "$REGISTRIES"
+            --override-input systems "$SYSTEMS"
+          )
+          if [[ -n "$LOCK_DIR" ]]; then
+            nix_args+=(--override-input rice-lock "path:$PWD/$LOCK_DIR")
+          fi
           nix build \
-            "${{ inputs.rice-config }}#checks.${{ matrix.arch }}.${{ matrix.target }}-compile-${{ matrix.emacs }}" \
-            --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
-            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
-            --override-input registries "${{ inputs.registries }}" \
-            --override-input systems "${{ inputs.systems }}" \
+            "${RICE_CONFIG}#checks.${ARCH}.${TARGET}-compile-${EMACS}" \
+            "${nix_args[@]}" \
             --print-build-logs
       # The same options as byte-compile except for the subcommand (test-type)
       # and the installable (test-derivation).
       - name: Test
         if: ${{ matrix.test-type }}
+        env:
+          LOCK_DIR: ${{ inputs.lock-dir }}
+          MELPA: ${{ inputs.melpa }}
+          REGISTRIES: ${{ inputs.registries }}
+          RICE_CONFIG: ${{ inputs.rice-config }}
+          SYSTEMS: ${{ inputs.systems }}
+          TEST_DERIVATION: ${{ matrix.test-derivation }}
+          TEST_TYPE: ${{ matrix.test-type }}
         run: |
-          nix ${{ matrix.test-type }} \
-            "${{ inputs.rice-config }}#${{ matrix.test-derivation }}" \
-            --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}" \
-            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
-            --override-input registries "${{ inputs.registries }}" \
-            --override-input systems "${{ inputs.systems }}" \
+          nix_args=(
+            --override-input rice-src "path:$PWD"
+            --override-input melpa "$MELPA"
+            --override-input registries "$REGISTRIES"
+            --override-input systems "$SYSTEMS"
+          )
+          if [[ -n "$LOCK_DIR" ]]; then
+            nix_args+=(--override-input rice-lock "path:$PWD/$LOCK_DIR")
+          fi
+          nix "$TEST_TYPE" \
+            "${RICE_CONFIG}#${TEST_DERIVATION}" \
+            "${nix_args[@]}" \
             --print-build-logs

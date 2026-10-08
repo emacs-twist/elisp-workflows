@@ -26,9 +26,11 @@ jobs:
     outputs:
       include: ${{ steps.matrix.outputs.include }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
-      - uses: cachix/install-nix-action@v31.11.1
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
         with:
           # Pin the Nix version to temporarily work around a Nix bug.
           # See https://github.com/emacs-twist/twist.nix/issues/159
@@ -36,13 +38,25 @@ jobs:
 
       - name: Get the matrix
         id: matrix
+        env:
+          LOCK_DIR: ${{ inputs.lock-dir }}
+          MELPA: ${{ inputs.melpa }}
+          REGISTRIES: ${{ inputs.registries }}
+          RICE_CONFIG: ${{ inputs.rice-config }}
         run: |
           set -e
-          echo "include=$(nix eval "${{ inputs.rice-config }}#melpaRecipes" --json --apply 'attrs: builtins.attrValues (builtins.mapAttrs (package: recipe: { inherit package recipe; }) attrs)' \
-            ${{ inputs.lock-dir != '' && format('--override-input rice-lock "path:$PWD/{0}"', inputs.lock-dir) || '' }} \
-            --override-input registries "${{ inputs.registries }}" \
-            --override-input rice-src "path:$PWD" --override-input melpa "${{ inputs.melpa }}")" \
-            >> "$GITHUB_OUTPUT"
+          nix_args=(
+            --override-input registries "$REGISTRIES"
+            --override-input rice-src "path:$PWD"
+            --override-input melpa "$MELPA"
+          )
+          if [[ -n "$LOCK_DIR" ]]; then
+            nix_args+=(--override-input rice-lock "path:$PWD/$LOCK_DIR")
+          fi
+          echo "include=$(nix eval "${RICE_CONFIG}#melpaRecipes" \
+            --json \
+            --apply 'attrs: builtins.attrValues (builtins.mapAttrs (package: recipe: { inherit package recipe; }) attrs)' \
+            "${nix_args[@]}")" >> "$GITHUB_OUTPUT"
 
   check:
     needs: matrix
@@ -55,19 +69,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
+        persist-credentials: false
         path: src
 
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
+        persist-credentials: false
         repository: riscy/melpazoid
         path: melpazoid
 
     # Install Python and melpazoid in the same way as the original repository.
     # See https://github.com/riscy/melpazoid/blob/master/.github/workflows/test.yml
     - name: Set up Python
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
       with:
         python-version: 3.13.2
 
@@ -81,5 +97,7 @@ jobs:
 
     - name: Check the package using melpazoid
       working-directory: melpazoid
+      env:
+        RECIPE: ${{ matrix.recipe }}
       run: |
-         RECIPE='${{ matrix.recipe }}' LOCAL_REPO="${GITHUB_WORKSPACE}/src" make
+        RECIPE="$RECIPE" LOCAL_REPO="${GITHUB_WORKSPACE}/src" make
