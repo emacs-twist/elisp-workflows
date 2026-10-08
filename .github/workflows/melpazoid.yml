@@ -99,5 +99,6 @@ jobs:
       working-directory: melpazoid
       env:
         RECIPE: ${{ matrix.recipe }}
+        EXIST_OK: true
       run: |
         RECIPE="$RECIPE" LOCAL_REPO="${GITHUB_WORKSPACE}/src" make
