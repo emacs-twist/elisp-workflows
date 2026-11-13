@@ -82,18 +82,16 @@ jobs:
 
     # Install Python and melpazoid in the same way as the original repository.
     # See https://github.com/riscy/melpazoid/blob/master/.github/workflows/test.yml
-    - name: Set up Python
-      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+    - name: Install uv
+      uses: astral-sh/setup-uv@v9.0.0
       with:
-        python-version: 3.13.2
+        enable-cache: true
 
     - name: Install melpazoid
       working-directory: melpazoid
       run: |
         sudo apt-get install emacs
         emacs --version
-        python -m pip install --upgrade pip
-        pip install . mypy pytest black
 
     - name: Check the package using melpazoid
       working-directory: melpazoid
